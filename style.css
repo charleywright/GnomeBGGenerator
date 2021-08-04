@@ -1,0 +1,76 @@
+:root {
+    --background : #282c34;
+    --currentline : #0A99bbff;
+    --currentcell : #00000000;
+    --occurrence : #434957;
+    --ctrlclick : #56b6c2;
+    --sideareas : #21252b;
+    --matched_p : #434957;
+    --unmatched_p : #4Dff0000;
+    --normal : #abb2bf;
+    --keyword : #c678dd;
+    --builtin : #56b6c2;
+    --definition : #61afef;
+    --comment : #5c6370;
+    --string : #98c379;
+    --number : #d19a66;
+    --instance : #e5c07b;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--normal);
+}
+
+input {
+    margin-bottom: 50px;
+}
+
+.configs > div {
+    position: relative;
+    width: 80vw;
+}
+
+.configs > div > button {
+    background-color: var(--matched_p);
+    border: 1px solid var(--comment);
+    border-radius: 4px;
+    padding: 0 5px;
+}
+
+.monitor {
+    position: absolute;
+    background-color: var(--matched_p);
+    border: 1px solid var(--comment);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.monitor input {
+    position: absolute;
+    visibility: hidden;
+}
+
+button {
+    border: none;
+    background-color: var(--sideareas);
+    height: 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--normal);
+    font-size: 0.7rem;
+    transition: color 0.1s;
+    z-index: 5;
+}
+
+button:hover {
+    color: var(--ctrlclick);
+}
+
+.monitor img {
+    z-index: 1;
+    position: absolute;
+    margin-left: auto;
+}
