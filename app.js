@@ -25,7 +25,25 @@ function GenerateConfigs(monitorConfigs) {
     const dimensions = { x: 0, y: 0 };
     for (const monitor of monitorConfig.querySelectorAll("logicalmonitor")) {
       const scale = +monitor.querySelector("scale").innerText;
-      const rotation = monitor.querySelector("transform rotation");
+
+      /* Linux does horrific things with rotations */
+      const r = monitor.querySelector("transform rotation");
+      let rotation;
+      switch (r ? r.innerText : "") {
+        case "right":
+          rotation = 270;
+          break;
+        case "left":
+          rotation = 90;
+          break;
+        case "upside_down":
+          rotation = 180;
+          break;
+        default:
+          rotation = 0;
+          break;
+      }
+
       const resolution = {
         width: +monitor.querySelector("width").innerText * scale,
         height: +monitor.querySelector("height").innerText * scale,
@@ -41,14 +59,12 @@ function GenerateConfigs(monitorConfigs) {
       });
       const dimX =
         offset.x +
-        (rotation &&
-        (rotation.innerText == "left" || rotation.innerText == "right")
+        (rotation == 90 || rotation == 270
           ? resolution.height
           : resolution.width);
       const dimY =
         offset.y +
-        (rotation &&
-        (rotation.innerText == "left" || rotation.innerText == "right")
+        (rotation == 90 || rotation == 270
           ? resolution.width
           : resolution.height);
       if (dimX > dimensions.x) dimensions.x = dimX;
@@ -89,30 +105,11 @@ function RenderMonitors() {
         imagePreview.style.height = `${
           monitorCfg.resolution.height * 0.1 - 2
         }px`;
-        if (monitorCfg.rotation != null) {
-          /* Linux does horrific things with rotations */
-          switch (monitorCfg.rotation.innerText) {
-            case "right":
-              imagePreview.style.transform = "rotate(270deg)";
-              break;
-            case "left":
-              imagePreview.style.transform = "rotate(90deg)";
-              break;
-            case "upside_down":
-              imagePreview.style.transform = "rotate(180deg)";
-              break;
-            default:
-              console.log(monitorCfg.rotation.innerText);
-          }
-        }
+        imagePreview.style.transform = `rotate(${monitorCfg.rotation}deg)`;
         monitor.appendChild(imagePreview);
       }
       monitor.className = "monitor";
-      if (
-        monitorCfg.rotation &&
-        (monitorCfg.rotation.innerText == "left" ||
-          monitorCfg.rotation.innerText == "right")
-      ) {
+      if (monitorCfg.rotation == 90 || monitorCfg.rotation == 270) {
         monitor.style.height = `${monitorCfg.resolution.width * 0.1 - 2}px`;
         monitor.style.width = `${monitorCfg.resolution.height * 0.1 - 2}px`;
       } else {
@@ -139,5 +136,39 @@ function RenderMonitors() {
 }
 
 function GenerateImage(config) {
-  console.log(`GenearteImage ${JSON.stringify(config)}`);
+  const canvas = document.createElement("canvas");
+  canvas.width = `${config.dimensions.x}`;
+  canvas.height = `${config.dimensions.y}`;
+  const ctx = canvas.getContext("2d");
+  for (let i = 0; i < config.monitors.length; i++) {
+    const monitor = config.monitors[i];
+    const img = new Image();
+    img.onload = function () {
+      ctx.save();
+      const x =
+        monitor.offset.x +
+        (monitor.resolution.rotation == 90 || monitor.rotation == 270
+          ? monitor.resolution.height
+          : monitor.resolution.width) *
+          0.5;
+      const y =
+        monitor.offset.y +
+        (monitor.resolution.rotation == 90 || monitor.rotation == 270
+          ? monitor.resolution.width
+          : monitor.resolution.height) *
+          0.5;
+      ctx.translate(x, y);
+      ctx.rotate((monitor.rotation * Math.PI) / 180);
+      ctx.drawImage(
+        img,
+        -monitor.resolution.width * 0.5,
+        -monitor.resolution.height * 0.5,
+        monitor.resolution.width,
+        monitor.resolution.height
+      );
+      ctx.restore();
+    };
+    img.src = URL.createObjectURL(monitor.file);
+  }
+  document.body.appendChild(canvas);
 }
